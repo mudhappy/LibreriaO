@@ -1,0 +1,204 @@
+package servlets;
+
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import service.SenorSmService;
+
+import model.CategoriaBean;
+import dao.CategoriaDao;
+import dao.ImagenDao;
+import dao.MarcaDao;
+import dao.ProductoDao;
+import java.io.PrintWriter;
+import javax.servlet.http.HttpSession;
+import model.ImagenBean;
+import model.MarcaBean;
+import model.ProductoBean;
+
+
+@WebServlet({"/AddProducto","/AddCategoria","/AddMarca","/AddImagen","/Usuario","/Main"})
+public class SenorSmController extends HttpServlet {
+  private SenorSmService es;
+
+  @Override
+  public void init() throws ServletException {
+    es = new SenorSmService();
+  }
+
+  @Override
+  protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    String path = request.getServletPath();
+    if (path.equals("/AddProducto")) {
+      addProducto(request, response);
+    }else if (path.equals("/AddCategoria")){
+        addCategoria(request, response);
+    }else if (path.equals("/AddMarca")){
+        addMarca(request,response);
+    }else if (path.equals("/AddImagen")){
+        addImagen(request,response);
+    }else if (path.equals("/Usuario")){
+        Usuario(request,response);
+    }else if (path.equals("/Main")){
+        Listado(request,response);
+    }
+    
+  }
+
+  
+  private void addProducto(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    try {
+      // Datos
+      int idcat=Integer.parseInt(request.getParameter("idcat"));
+      int idmar=Integer.parseInt(request.getParameter("idmar"));
+      String nombre = request.getParameter("nombre");
+      Double preciocompra = Double.parseDouble(request.getParameter("preciocompra"));
+      Double precioventa = Double.parseDouble(request.getParameter("precioventa"));
+      int stock = Integer.parseInt(request.getParameter("stock"));
+      int idima=Integer.parseInt(request.getParameter("idima"));
+      /*ProductoBean productoBean = new ProductoBean();
+      productoBean.setIdcat(idcat);
+      productoBean.setIdmar(idmar);
+      productoBean.setNombre(nombre);
+      productoBean.setPrecio(precio);
+      productoBean.setStock(stock);*/
+      // Proceso
+      //es.addProducto(productoBean);
+      es.addProducto(idcat, idmar, nombre, preciocompra, precioventa, stock, idima);
+      Listado(request, response);
+      // Salida
+      request.setAttribute("msg", "Proceso ok.");
+    } catch (Exception e) {
+      request.setAttribute("error", e.getMessage());
+    }
+        // Forward
+    RequestDispatcher rd;
+    rd = request.getRequestDispatcher("articulo.jsp");
+    rd.forward(request, response);
+  }
+
+    private void addCategoria(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        try {
+            
+      // Datos
+      String nombre = request.getParameter("nombre");
+      // Proceso
+      es.addCategoria(nombre);
+      Listado(request, response);
+      // Salida
+      request.setAttribute("msg", "Proceso ok.");
+    } catch (Exception e) {
+      request.setAttribute("error", e.getMessage());
+    }
+
+    // Forward
+    RequestDispatcher rd;
+    rd = request.getRequestDispatcher("articulo.jsp");
+    rd.forward(request, response);
+    }
+    private void addImagen(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        try {
+            
+      // Datos
+      String nombre = request.getParameter("nombre");
+      // Proceso
+      es.addImagen(nombre);
+      Listado(request, response);
+      // Salida
+      request.setAttribute("msg", "Proceso ok.");
+    } catch (Exception e) {
+      request.setAttribute("error", e.getMessage());
+    }
+
+    // Forward
+    RequestDispatcher rd;
+    rd = request.getRequestDispatcher("articulo.jsp");
+    rd.forward(request, response);
+    }
+
+    private void addMarca(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+       try {
+      // Datos
+      String nombre = request.getParameter("nombre");
+      // Proceso
+      es.addMarca(nombre);
+      Listado(request, response);
+      // Salida
+      request.setAttribute("msg", "Proceso ok.");
+    } catch (Exception e) {
+      request.setAttribute("error", e.getMessage());
+    }
+
+    // Forward
+    RequestDispatcher rd;
+    rd = request.getRequestDispatcher("articulo.jsp");
+    rd.forward(request, response);
+    }
+    
+    private void Listado(HttpServletRequest request, HttpServletResponse response){
+       try {
+           
+            CategoriaDao tcDao = new CategoriaDao();
+            List<CategoriaBean> listaCategoria = new ArrayList<CategoriaBean>();
+            listaCategoria = tcDao.listar();
+            request.setAttribute("listaCategoria", listaCategoria);
+            
+            MarcaDao LMarca = new MarcaDao();
+            List<MarcaBean> listaMarca = new ArrayList<MarcaBean>();
+            listaMarca = LMarca.listar();
+            request.setAttribute("listaMarca", listaMarca);
+            
+            ProductoDao LProducto= new ProductoDao();
+            List<ProductoBean> listaProducto = new ArrayList<ProductoBean>();
+            listaProducto = LProducto.listar();
+            request.setAttribute("listaProducto", listaProducto);
+            
+            ImagenDao LImagen= new ImagenDao();
+            List<ImagenBean> listaImagen = new ArrayList<ImagenBean>();
+            listaImagen = LImagen.listar();
+            request.setAttribute("listaImagen", listaImagen);
+            
+            request.getRequestDispatcher("articulo.jsp").forward(request, response);
+        } catch (Exception e) {
+            request.setAttribute("error", e.getMessage());
+        }
+    }
+
+   public void Usuario(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("text/html;charset=UTF-8");
+        try (PrintWriter out = response.getWriter()) {
+            HttpSession session = request.getSession();
+            String sLogin = request.getParameter("txtLogin");
+            String sPassword = request.getParameter("txt-password");
+            if(sLogin==null){
+                sLogin=session.getAttribute("login").toString();                
+            }
+            if(sPassword==null){
+                sPassword=session.getAttribute("password").toString();                
+            }
+            
+            if (sLogin.equals("admin") && sPassword.equals("123")) {
+                session.setAttribute("login", sLogin);
+                session.setAttribute("password", sPassword);            
+                  
+                Listado(request, response);
+                
+            } else {
+               
+            }
+
+        }
+    }
+       
+
+   }
+
+
